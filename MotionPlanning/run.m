@@ -1,3 +1,4 @@
+clear;
 % For reproducible results
 rng(2020);
 
