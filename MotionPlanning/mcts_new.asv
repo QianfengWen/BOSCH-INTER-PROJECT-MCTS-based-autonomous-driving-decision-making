@@ -193,7 +193,7 @@ newNode3.state = frenet2global(refPath, newNode3.egoFrenetState);
 
 
 
-if ~checkCollision(newNode3, predictedTgtPoses{int16((newNode3.time) / TimeResolution)}, egoVehicle) && newNode3.egoFrenetState(2) <= speedlimit && newNode3.egoFrenetState(2) >= 0
+if ~checkCollision(newNode3, predictedTgtPoses{int16((newNode3.time) / TimeResolution)}, egoVehicle) && newNode3.egoFrenetState(2) <= speedlimit
     Tree{node.index}.children(numel(Tree{node.index}.children) + 1) = newNode3.index;
     Tree{numel(Tree) + 1} = newNode3;
 
@@ -535,8 +535,8 @@ cost_comfort_jerk = 2 / (1 + exp(-jerk));
 cost_comfort_acc = 0;
 cost_comfort_alter = 0;
 
-if comfort < -2
-    cost_comfort_acc = - 2 * comfort;
+if comfort > 2
+    cost_comfort_acc = 0.2 * comfort;
 end
 
 if acc * node.parentaCC < 0
