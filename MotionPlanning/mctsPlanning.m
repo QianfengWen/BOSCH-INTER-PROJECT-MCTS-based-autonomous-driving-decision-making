@@ -1,12 +1,6 @@
 clear;
 % Initially state
 
-% [egoVehicle, scenario, sensors] = ds2_lanes_roadWith3Cars;
-% [scenario, egoVehicle, refPaths, allStatus] = ds6_lanes_roadWith3Cars();
-
-% This is for 6 lanes jumping queue scenario
-% [scenario, egoVehicle, refPaths, allStatus] = ds6_lanes_raodWith3Cars_jumpingQueue_();
-
 % This is for 6 lanes With5CarsTurningLeft scenario.
 % [scenario, egoVehicle, egoWaypoints, refPaths, allStatus] = ds6_lanes_roadWith5CarsTurningLeft();
 
@@ -14,10 +8,10 @@ clear;
 % [scenario, egoVehicle, egoWaypoints, refPaths, allStatus] = ds6_lanes_roadWith5Cars_horizontal_crossing();
 
 % This is for 6 lanes With5Cars stucked scenario
-% [scenario, egoVehicle, egoWaypoints, refPaths, allStatus] = ds6_lanes_roadWith5Cars_stucked();
+[scenario, egoVehicle, egoWaypoints, refPaths, allStatus] = ds6_lanes_roadWith5Cars_stucked();
 
 % This is for 6 lanes With5Cars Cutting in scenario
-[scenario, egoVehicle, egoWaypoints, refPaths, allStatus] = ds6_lanes_roadWith5CarsCuttingIn();
+% [scenario, egoVehicle, egoWaypoints, refPaths, allStatus] = ds6_lanes_roadWith5CarsCuttingIn();
 
 % This is for giving the egoCar's initial position. 
 % setStartEgoState(egoWaypoints, velocity, acceleration)
@@ -83,7 +77,9 @@ chasePlot(egoVehicle);
 predictedActPoses = cell(0);
 for i = 1:numel(refPaths)
     predictedActPoses{i} = [0 0 0 0 0 0];
-    if numel(refPaths{i}.Waypoints(:, 1)) == 1
+    if numel(refPaths{i}) == 6
+        predictedActPoses{i} = refPaths{i};
+    elseif numel(refPaths{i}.Waypoints(:, 1)) == 1  
         predictedActPoses{i} = refPaths{i};
     else
         for j = 1:(numel(refPaths{i}.SegmentParameters(:, 1)))
@@ -385,7 +381,7 @@ end
 end
 
 function newNode = selection(node, Tree)
-% 根据UCB选择最大的子节点
+% choose the best node with the biggest UCB score
 newNode = Tree{node.index};
 while numel(newNode.children) ~= 1
 
@@ -570,7 +566,7 @@ disp(currNode.egoFrenetState(1) > checkPoint)
 end
 
 function tree_ = back_propagation(node, score, tree)
-% 用给定的分数更新节点
+% update every node's UCB in the MCTS tree 
 while node.parent ~= 0
     tree{node.index}.score = node.score + score;
     tree{node.index}.visits = node.visits + 1;
