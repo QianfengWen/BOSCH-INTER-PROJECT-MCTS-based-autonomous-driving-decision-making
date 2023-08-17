@@ -2,24 +2,24 @@ clear;
 % Initially state
 
 % This is for 6 lanes With5CarsTurningLeft scenario.
-% [scenario, egoVehicle, egoWaypoints, refPaths, allStatus] = ds6_lanes_roadWith5CarsTurningLeft();
+% [scenario, egoVehicle, egoWaypoints, refPaths, allStatus, roadConfigs] = ds6_lanes_roadWith5CarsTurningLeft();
 
 % This is for 6 lanes With5Cars horizontal crossing scenario
-% [scenario, egoVehicle, egoWaypoints, refPaths, allStatus] = ds6_lanes_roadWith5Cars_horizontal_crossing();
+% [scenario, egoVehicle, egoWaypoints, allrefPaths, allStatus, roadConfigs] = ds6_lanes_roadWith5Cars_horizontal_crossing();
 
 % This is for 6 lanes With5Cars stucked scenario
-% [scenario, egoVehicle, egoWaypoints, refPaths, allStatus] = ds6_lanes_roadWith5Cars_stucked();
+% [scenario, egoVehicle, egoWaypoints, refPaths, allStatus, roadConfigs] = ds6_lanes_roadWith5Cars_stucked();
 
 % This is for 6 lanes With5Cars Cutting in scenario
-% [scenario, egoVehicle, egoWaypoints, refPaths, allStatus] = ds6_lanes_roadWith5CarsCuttingIn();
+% [scenario, egoVehicle, egoWaypoints, refPaths, allStatus, roadConfigs] = ds6_lanes_roadWith5CarsCuttingIn();
 
 % This is for 6 lanes With5Cars stopping scenario
-% [scenario, egoVehicle, egoWaypoints, refPaths, allStatus] = ds6_lanes_roadWith5Cars_stopping();
+% [scenario, egoVehicle, egoWaypoints, refPaths, allStatus, roadConfigs] = ds6_lanes_roadWith5Cars_stopping();
 
 % This is for 6 lanes With5Cars 2Cars cutting in scenario
-[scenario, egoVehicle, egoWaypoints, refPaths, allStatus] = ds6_lanes_roadWith5Cars_2Cars_CuttingIn();
+[scenario, egoVehicle, egoWaypoints, refPaths, allStatus, roadConfigs] = ds6_lanes_roadWith5Cars_2Cars_CuttingIn();
 
-% This is for giving the egoCar's initial position. 
+% This is for giving the egoCar's initial position.
 % setStartEgoState(egoWaypoints, velocity, acceleration)
 startEgoState = setStartEgoState(egoWaypoints, 5, 0);
 
@@ -85,7 +85,7 @@ for i = 1:numel(refPaths)
     predictedActPoses{i} = [0 0 0 0 0 0];
     if numel(refPaths{i}) == 6
         predictedActPoses{i} = refPaths{i};
-    elseif numel(refPaths{i}.Waypoints(:, 1)) == 1  
+    elseif numel(refPaths{i}.Waypoints(:, 1)) == 1
         predictedActPoses{i} = refPaths{i};
     else
         for j = 1:(numel(refPaths{i}.SegmentParameters(:, 1)))
@@ -127,8 +127,6 @@ end
 while scenario.SimulationTime < scenario.StopTime && egoVehicle.Position(1) < DestinationPosition
 
     % This is to detect all actor Vehicles.
-    targetPosesEgoCoords = targetPoses(egoVehicle);
-    actPoses = driving.scenario.targetsToScenario(targetPosesEgoCoords,egoVehicle); % use the targetPoses function to obtain all target actor poses in ego vehicle coordinates
     profiles = actorProfiles(scenario);
 
     % This is to detect the lane that the egoVehicle is driving on.
@@ -161,12 +159,12 @@ while scenario.SimulationTime < scenario.StopTime && egoVehicle.Position(1) < De
                 curr_node = Tree{1};
             end
         else
-            if curr_node.time - MaxTimeHorizon >= 0
-                cost = roll_out(curr_node, MaxTimeHorizon, TimeResolution, predictedActPoses, accMax, speedlimit, egorefPath, intersectionS, egoVehicle, profiles, scenario);
-                Tree = back_propagation(curr_node, cost, Tree);
-                Tree = updateUCB(Tree{1}, Tree);
-                curr_node = Tree{1};
-            end
+            % if curr_node.time - MaxTimeHorizon >= 0
+            cost = roll_out(curr_node, MaxTimeHorizon, TimeResolution, predictedActPoses, accMax, speedlimit, egorefPath, intersectionS, egoVehicle, profiles, scenario);
+            Tree = back_propagation(curr_node, cost, Tree);
+            Tree = updateUCB(Tree{1}, Tree);
+            curr_node = Tree{1};
+            % end
         end
     end
     % 1 is the index of the root node.
@@ -259,7 +257,7 @@ if emergencyAcc <= -8
 end
 emergencyJerkS = (emergencyAcc - node.egoFrenetState(3)) / TimeResolution;
 [displacementEmergencyS, deltaSpeedEmergencyS, displacementEmergencyL, deltaSpeedEmergencyL] = getDisplacement(node, emergencyJerkS, 0, TimeResolution);
-if displacementEmergencyS < 0 
+if displacementEmergencyS < 0
     displacementEmergencyS = 0;
 end
 newNode5.egoFrenetState = node.egoFrenetState + [displacementEmergencyS, deltaSpeedEmergencyS, emergencyJerkS * TimeResolution, displacementEmergencyL, deltaSpeedEmergencyL, 0];
@@ -574,7 +572,7 @@ disp(currNode.egoFrenetState(1) > checkPoint)
 end
 
 function tree_ = back_propagation(node, score, tree)
-% update every node's UCB in the MCTS tree 
+% update every node's UCB in the MCTS tree
 while node.parent ~= 0
     tree{node.index}.score = node.score + score;
     tree{node.index}.visits = node.visits + 1;

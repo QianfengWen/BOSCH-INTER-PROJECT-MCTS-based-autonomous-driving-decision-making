@@ -1,5 +1,5 @@
-function displayScenario(AllPath, refPaths, profiles, allStatus)
-[scenario, egoVehicle] = createScenario(AllPath, refPaths, profiles, allStatus);
+function displayScenario(AllPath, refPaths, profiles, allStatus, roadConfigs)
+[scenario, egoVehicle] = createScenario(AllPath, refPaths, profiles, allStatus, roadConfigs);
 plot(scenario);
 chasePlot(egoVehicle);
 while advance(scenario)
@@ -7,33 +7,17 @@ while advance(scenario)
 end
 end
 
-function [scenario, egoVehicle] = createScenario(AllPath, refPaths, profiles, allStatus)
+function [scenario, egoVehicle] = createScenario(AllPath, refPaths, profiles, allStatus, roadConfigs)
 scenario = drivingScenario("StopTime",20);
 
 % Add all road segments
-roadCenters = [-68.9 -0.5 0;
-    100.2 0 0];
-marking = [laneMarking('Solid', 'Color', [0.98 0.86 0.36])
-    laneMarking('Dashed')
-    laneMarking('Dashed')
-    laneMarking('DoubleSolid', 'Color', [0.9 0.9 0.3])
-    laneMarking('Dashed')
-    laneMarking('Dashed')
-    laneMarking('Solid')];
-laneSpecification = lanespec(6, 'Marking', marking);
-road(scenario, roadCenters, 'Lanes', laneSpecification, 'Name', 'Road');
-
-roadCenters = [8.1 70.8 0;
-    7.2 -79.3 0];
-marking = [laneMarking('Solid', 'Color', [0.98 0.86 0.36])
-    laneMarking('Dashed')
-    laneMarking('Dashed')
-    laneMarking('DoubleSolid', 'Color', [0.96 0.98 0.3])
-    laneMarking('Dashed')
-    laneMarking('Dashed')
-    laneMarking('Solid')];
-laneSpecification = lanespec(6, 'Marking', marking);
-road(scenario, roadCenters, 'Lanes', laneSpecification, 'Name', 'Road1');
+for i = 1:numel(roadConfigs)
+    tempRoad = roadConfigs{i};
+    roadCenters = tempRoad.roadCenters;
+    marking = tempRoad.marking;
+    laneSpecification = tempRoad.laneSpecification;
+    road(scenario, roadCenters, 'Lanes', laneSpecification, 'Name', 'Road');
+end
 
 % Add the ego vehicle
 egoVehicle = vehicle(scenario, ...
