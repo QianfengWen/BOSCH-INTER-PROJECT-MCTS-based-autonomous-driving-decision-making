@@ -8,10 +8,16 @@ clear;
 % [scenario, egoVehicle, egoWaypoints, refPaths, allStatus] = ds6_lanes_roadWith5Cars_horizontal_crossing();
 
 % This is for 6 lanes With5Cars stucked scenario
-[scenario, egoVehicle, egoWaypoints, refPaths, allStatus] = ds6_lanes_roadWith5Cars_stucked();
+% [scenario, egoVehicle, egoWaypoints, refPaths, allStatus] = ds6_lanes_roadWith5Cars_stucked();
 
 % This is for 6 lanes With5Cars Cutting in scenario
 % [scenario, egoVehicle, egoWaypoints, refPaths, allStatus] = ds6_lanes_roadWith5CarsCuttingIn();
+
+% This is for 6 lanes With5Cars stopping scenario
+% [scenario, egoVehicle, egoWaypoints, refPaths, allStatus] = ds6_lanes_roadWith5Cars_stopping();
+
+% This is for 6 lanes With5Cars 2Cars cutting in scenario
+[scenario, egoVehicle, egoWaypoints, refPaths, allStatus] = ds6_lanes_roadWith5Cars_2Cars_CuttingIn();
 
 % This is for giving the egoCar's initial position. 
 % setStartEgoState(egoWaypoints, velocity, acceleration)
@@ -28,7 +34,7 @@ roadS = pathPoints(:,end);
 % Set destination and intersection position.
 intersectionPosition = egoWaypoints(3);
 intersectionS = intersectionPosition(1) - egoWaypoints(1);
-DestinationPosition = egoWaypoints(4);
+DestinationPosition = egoWaypoints(end, 1);
 
 
 % Initial ego state for stuckedCar Scenario
@@ -53,7 +59,7 @@ max_iter = 3000;
 accMax = 5;
 limitJerk = 15;
 speedlimit = 20;
-MaxTimeHorizon = 3.0;
+MaxTimeHorizon = 2.0;
 TimeResolution = 1.0;
 root.visits = 1;
 root.time = TIME;
@@ -118,7 +124,7 @@ for i = 1:numel(refPaths)
     end
 end
 
-while scenario.SimulationTime < scenario.StopTime
+while scenario.SimulationTime < scenario.StopTime && egoVehicle.Position(1) < DestinationPosition
 
     % This is to detect all actor Vehicles.
     targetPosesEgoCoords = targetPoses(egoVehicle);
@@ -253,7 +259,9 @@ if emergencyAcc <= -8
 end
 emergencyJerkS = (emergencyAcc - node.egoFrenetState(3)) / TimeResolution;
 [displacementEmergencyS, deltaSpeedEmergencyS, displacementEmergencyL, deltaSpeedEmergencyL] = getDisplacement(node, emergencyJerkS, 0, TimeResolution);
-
+if displacementEmergencyS < 0 
+    displacementEmergencyS = 0;
+end
 newNode5.egoFrenetState = node.egoFrenetState + [displacementEmergencyS, deltaSpeedEmergencyS, emergencyJerkS * TimeResolution, displacementEmergencyL, deltaSpeedEmergencyL, 0];
 newNode5.egoFrenetState(3) = 0;
 newNode5.state = frenet2global(refPath, newNode5.egoFrenetState);
@@ -363,7 +371,7 @@ for nextAcc = 1:accMax
 
     newNode2.egoFrenetState = newNode2.egoFrenetState + [displacementS2, deltaSpeedS2, jerk2 * TimeResolution, displacementL2, deltaSpeedL2, 0];
     newNode2.state = frenet2global(refPath, newNode2.egoFrenetState);
-    if ~checkCollision(node, newNode2, predictedTgtPoses, egoVehicle, profiles, TimeResolution, scenario, refPath) && newNode2.egoFrenetState(3) <= 3 && newNode2.egoFrenetState(2) < speedlimit && newNode2.egoFrenetState(2) > 0
+    if ~checkCollision(node, newNode2, predictedTgtPoses, egoVehicle, profiles, TimeResolution, scenario, refPath) && newNode2.egoFrenetState(3) <= 3 && newNode2.egoFrenetState(2) < speedlimit && newNode2.egoFrenetState(2) > 0 && displacementS2 >= 0
         Tree{node.index}.children(numel(Tree{node.index}.children) + 1) = newNode2.index;
         Tree{numel(Tree) + 1} = newNode2;
     end
