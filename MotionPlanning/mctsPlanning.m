@@ -24,10 +24,17 @@ clear;
 
 % This is for 6 lanes With5Cars while egoVehicle turning left
 % [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = ds6_lanes_roadWith5Cars_egoTurningLeft();
-[scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = ds6_lanes_roadWith5Cars_egoTurningLeft_2();
+% [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = ds6_lanes_roadWith5Cars_egoTurningLeft_2();
 
 % This is for highWay with 4 lanes
 % [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = ds4_lanes_highWay();
+% [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = ds4_lanes_highWay_advanced();
+
+% This is for emergency_break_and_crowded situation.
+% [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = ds6_emergency_break_and_crowded_scenario();
+
+% This is for bend scenario.
+[scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = ds4_bend_Scenario();
 
 % This is for giving the egoCar's initial position.
 % setStartEgoState(egoWaypoints, velocity, acceleration)
@@ -85,7 +92,7 @@ root.laneChangingProperties = struct('LeftChange', 0, 'RightChange', 0, 'Change'
 AllPath = {startEgoState};
 AllTree = {0};
 plot(scenario,'Waypoints','off','RoadCenters','off');
-chasePlot(egoVehicle);
+chasePlot(egoVehicle,"ViewHeight",10.0, "ViewPitch",20);
 
 
 % compute predicted positions for detected cars
@@ -113,7 +120,7 @@ for i = 1:numel(predictedActTrajectories)
 end
 
 
-while scenario.SimulationTime < scenario.StopTime && root.egoFrenetState(1) < DestinationS 
+while scenario.SimulationTime < scenario.StopTime && root.egoFrenetState(1) < DestinationS
 
     % This is to detect all actor Vehicles.
     profiles = actorProfiles(scenario);
@@ -286,7 +293,7 @@ end
 
 for i = 1:numel(lbdry)
     % check whether the lanes are dashed
-    if (lbdry(i).BoundaryType == 2 || lbdry(i).BoundaryType == 4) && (egoVehicle.Position(1) >= refPath.Waypoints(3,1) || egoVehicle.Position(1) <= refPath.Waypoints(2,1)) && node.state(5) >= 2
+    if (lbdry(i).BoundaryType == 2 || lbdry(i).BoundaryType == 4) && (egoVehicle.Position(1) >= refPath.Waypoints(3,1) || egoVehicle.Position(1) <= refPath.Waypoints(2,1)) && node.state(5) >= 1
         if lbdry(i).LateralOffset > 0
             % change to the left-side lane
 
@@ -612,7 +619,7 @@ for i = 1:numel(predictedActPositions)
     objCarDim = [profiles(i + 1).Length, profiles(i + 1).Width];
 
     egoCarDim = [egoVehicle.Length, egoVehicle.Width];
-   for j = 2:numel(egoVehicleTraj(:, 1))
+    for j = 2:numel(egoVehicleTraj(:, 1))
         if index + j - 1 <= numel(predictedActPositions{i}(:, 1))
             xdistance = abs(egoVehicleTraj(j, 1) - predictedActPositions{i}(index + j - 1, 1)) - 0.5 * (objCarDim(1) * abs(cosd(predictedActPositions{i}(index + j - 1, 3))) + objCarDim(2) * abs(sind(predictedActPositions{i}(index + j - 1, 3)))) - 0.5 * (egoCarDim(1) * abs(cos(egoVehicleTraj(j, 3))) + egoCarDim(2) * abs(sin(egoVehicleTraj(j, 3))));
             ydistance = abs(egoVehicleTraj(j, 2) - predictedActPositions{i}(index + j - 1, 2)) - 0.5 * (objCarDim(2) * abs(cosd(predictedActPositions{i}(index + j - 1, 3))) + objCarDim(1) * abs(sind(predictedActPositions{i}(index + j - 1, 3)))) - 0.5 * (egoCarDim(2) * abs(cos(egoVehicleTraj(j, 3))) + egoCarDim(1) * abs(sin(egoVehicleTraj(j, 3))));
@@ -624,7 +631,7 @@ for i = 1:numel(predictedActPositions)
             flag = true;
             break
         end
-   end
+    end
 end
 end
 
@@ -717,7 +724,7 @@ index = int32(currTime / 0.2) + 1;
 % when the distance is smaller than SAFE_DISTANCE
 
 for i = 1:numel(predictedActPositions)
-    
+
     if index <= numel(predictedActPositions{i}(1, :))
         predicted = predictedActPositions{i}(index, :);
     else
@@ -752,7 +759,7 @@ for i = 1:numel(predictedActPositions)
     else
         cost_safety_temp = 0;
     end
-    
+
     cost_safety = cost_safety + cost_safety_temp;
 end
 
@@ -762,7 +769,7 @@ function cost_laneChanging = calculateLaneChangingCost(node)
 % This function calculate the cost of the egoVehicle's action of chaning
 % lanes
 if abs(node.egoFrenetState(4)) >= 0.5
-    cost_laneChanging = 100.0;
+    cost_laneChanging = 150.0;
 else
     cost_laneChanging = 0.0;
 end
@@ -771,8 +778,8 @@ end
 function cost_is_break_to_stop = calculateBreakToStop(node, MaxTimeHorizon)
 % This function gives a panalty cost if the egoVehicle's speed is not
 % moving
-if node.time >= MaxTimeHorizon && node.state(5) < 1
-    cost_is_break_to_stop = 150.0;
+if node.time >= MaxTimeHorizon && node.state(5) < 2
+    cost_is_break_to_stop = 200.0;
 else
     cost_is_break_to_stop = 0.0;
 end

@@ -9,10 +9,8 @@ scenario = drivingScenario("SampleTime", 1.0, "StopTime", 15.0);
 actorWaypoints = cell(0);
 allStatus = cell(0);
 egoWaypoints = [-23.2079542936621 -5.86580669860298 0;
-    -5.7 -5.6 0;
+    -6.0 -5.6 0;
     21.5 -5.6 0;
-    52.4 -5.8 0;
-    74.8 -5.6 0;
     96.7 -6 0];
 roadConfigs = cell(0);
 
