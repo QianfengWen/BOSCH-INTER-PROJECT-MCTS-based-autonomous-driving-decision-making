@@ -1,11 +1,20 @@
 clear;
 % Initially state
 
+quantStatuses = cell(0);
+
+tempStatus = struct( ...
+    "Success", NaN, ...
+    "AvgTime", 0, ...
+    "collided", NaN);
+
+for test=1:300
+disp(test);
 % This is for 6 lanes With5CarsTurningLeft scenario.
 % [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = ds6_lanes_roadWith5CarsTurningLeft();
 
 % This is for 6 lanes With5Cars horizontal crossing scenario
-% [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = ds6_lanes_roadWith5Cars_horizontal_crossing();
+[scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = ds6_lanes_roadWith5Cars_horizontal_crossing();
 
 % This is for 6 lanes With5Cars stucked scenario
 % [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = ds6_lanes_roadWith5Cars_stucked();
@@ -34,7 +43,7 @@ clear;
 % [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = ds6_emergency_break_and_crowded_scenario();
 
 % This is for bend scenario.
-[scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = ds4_bend_Scenario();
+% [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = ds4_bend_Scenario();
 
 % This is for giving the egoCar's initial position.
 % setStartEgoState(egoWaypoints, velocity, acceleration)
@@ -49,7 +58,8 @@ pathPoints = closestPoint(egorefPath, egorefPath.Waypoints(:,1:2)); % [x y theta
 roadS = pathPoints(:,end);
 
 % Set destination position.
-DestinationS = egorefPath.PathLength;
+% DestinationS = egorefPath.PathLength;
+DestinationS = egorefPath.SegmentParameters(end, end);
 
 
 % Initial ego state for stuckedCar Scenario
@@ -70,7 +80,7 @@ egoFrenetState = global2frenet(egorefPath, startEgoState);
 
 % Initialize basic configs
 TIME = 0;
-max_iter = 3000;
+max_iter = 2500;
 accMax = 5;
 limitJerk = 15;
 speedlimit = 20;
@@ -91,8 +101,8 @@ root.laneChangingProperties = struct('LeftChange', 0, 'RightChange', 0, 'Change'
 
 AllPath = {startEgoState};
 AllTree = {0};
-plot(scenario,'Waypoints','off','RoadCenters','off');
-chasePlot(egoVehicle,"ViewHeight",10.0, "ViewPitch",20);
+% plot(scenario,'Waypoints','off','RoadCenters','off');
+% chasePlot(egoVehicle,"ViewHeight",10.0, "ViewPitch",20);
 
 
 % compute predicted positions for detected cars
@@ -119,9 +129,11 @@ for i = 1:numel(predictedActTrajectories)
 
 end
 
+% Count tic toc time for quantitative research;
+TotalTime = 0; 
 
 while scenario.SimulationTime < scenario.StopTime && root.egoFrenetState(1) < DestinationS
-
+    
     % This is to detect all actor Vehicles.
     profiles = actorProfiles(scenario);
 
@@ -136,6 +148,7 @@ while scenario.SimulationTime < scenario.StopTime && root.egoFrenetState(1) < De
 
     %PLANNING SIMULATION
     % iterTime = root.visits;
+    tic
     while (Tree{1}.visits < max_iter)
         curr_node = selection(Tree{1}, Tree);
 
@@ -151,6 +164,9 @@ while scenario.SimulationTime < scenario.StopTime && root.egoFrenetState(1) < De
                 else
                     % expand
                     Tree = expand(Tree, curr_node, TimeResolution, accMax, speedlimit, egorefPath, predictedActPositions, egoVehicle, profiles, lbdry, roadWidth, scenario);
+                    if numel(Tree) == 1
+                        Tree{1}.visits = max_iter;
+                    end
                 end
                 curr_node = Tree{1};
             end
@@ -165,6 +181,7 @@ while scenario.SimulationTime < scenario.StopTime && root.egoFrenetState(1) < De
     end
     % 1 is the index of the root node.
     root = Tree{1};
+    flagCollision = false;
     if numel(Tree{1}.children) > 1
 
         expectedNode = Tree{root.children(2)};
@@ -191,21 +208,22 @@ while scenario.SimulationTime < scenario.StopTime && root.egoFrenetState(1) < De
         expectedNode.egoFrenetState = root.egoFrenetState + [displacementEmergencyS, deltaSpeedEmergencyS, emergencyJerkS * TimeResolution, displacementEmergencyL, deltaSpeedEmergencyL, 0];
         expectedNode.state = frenet2global(egorefPath, expectedNode.egoFrenetState);
 
-        disp("Tried emergency break.")
+        % disp("Tried emergency break.")
         if stop
-            disp("There's obstacles forward, the car has stopped.")
-            disp(checkCollision(root, expectedNode, predictedActPositions, egoVehicle, profiles, TimeResolution, scenario, egorefPath))
+            % disp("There's obstacles forward, the car has stopped.")
+            % disp(checkCollision(root, expectedNode, predictedActPositions, egoVehicle, profiles, TimeResolution, scenario, egorefPath))
             expectedNode.egoFrenetState(3) = 0;
             expectedNode.state = frenet2global(egorefPath, expectedNode.egoFrenetState);
         else
             if checkCollision(root, expectedNode, predictedActPositions, egoVehicle, profiles, TimeResolution, scenario, egorefPath)
-                disp("Collision is inevitable.");
+                % disp("Collision is inevitable.");
+                flagCollision = true;
                 break;
             end
         end
 
     end
-
+    TotalTime(numel(TotalTime) + 1) = toc;
     AllPath{numel(AllPath) + 1} = expectedNode;
     AllTree{numel(AllTree) + 1} = Tree;
     wp = [root.state(1:2) 0; expectedNode.state(1:2) 0];
@@ -219,7 +237,7 @@ while scenario.SimulationTime < scenario.StopTime && root.egoFrenetState(1) < De
     else
         helperMoveEgoVehicleToState(egoVehicle, expectedNode.state)
     end
-
+    
 
 
     % reset root properties for next iteration
@@ -236,7 +254,27 @@ while scenario.SimulationTime < scenario.StopTime && root.egoFrenetState(1) < De
     advance(scenario)
 end
 
-displayScenario(AllPath, actorWaypoints, profiles, allStatus, roadConfigs);
+AvgTime = sum(TotalTime) / numel(TotalTime);
+if root.egoFrenetState(1) + 0.5 > DestinationS && ~flagCollision
+    success = true;
+    collided = false;
+else
+    if ~flagCollision
+    success = false;
+    collided = false;
+    else
+    success = false;
+    collided = true;
+    end
+end
+tempStatus.AvgTime = AvgTime;
+tempStatus.Success = success;
+tempStatus.collide = collided;
+quantStatuses{numel(quantStatuses) + 1} = tempStatus;
+
+% displayScenario(AllPath, actorWaypoints, profiles, allStatus, roadConfigs);
+
+end
 
 
 function Tree_ = expand(Tree, node, TimeResolution, accMax, speedlimit, refPath, predictedActPositions, egoVehicle, profiles, lbdry, roadWidth, scenario)
@@ -293,7 +331,7 @@ end
 
 for i = 1:numel(lbdry)
     % check whether the lanes are dashed
-    if (lbdry(i).BoundaryType == 2 || lbdry(i).BoundaryType == 4) && (egoVehicle.Position(1) >= refPath.Waypoints(3,1) || egoVehicle.Position(1) <= refPath.Waypoints(2,1)) && node.state(5) >= 1
+    if (lbdry(i).BoundaryType == 2 || lbdry(i).BoundaryType == 4) && node.state(5) >= 1 && node.egoFrenetState(1) >= refPath.SegmentParameters(end, end)  || node.egoFrenetState(1) <= refPath.SegmentParameters(2, end)
         if lbdry(i).LateralOffset > 0
             % change to the left-side lane
 
@@ -554,15 +592,15 @@ end
 
 cost2 = costFunction(node, newNode, checkPoint, predicted, MaxTimeHorizon, TimeResolution, egoVehicle, speedlimit, profiles, scenario);
 cost = cost + cost2(1);
-disp("currNode.state:");
-disp(currNode.state);
-disp("currNode.egoFrenetState:");
-disp(currNode.egoFrenetState);
-disp("currNode's cost:")
-disp("1. total_cost 2. cost_comfort 3. cost_safety 4. cost_pass 5. cost_stimulation 6. cost_lane_changing 7. cost_is_break_to_stop")
-disp(cost2);
-disp("If passed DestinationS:")
-disp(currNode.egoFrenetState(1) > checkPoint)
+% disp("currNode.state:");
+% disp(currNode.state);
+% disp("currNode.egoFrenetState:");
+% disp(currNode.egoFrenetState);
+% disp("currNode's cost:")
+% disp("1. total_cost 2. cost_comfort 3. cost_safety 4. cost_pass 5. cost_stimulation 6. cost_lane_changing 7. cost_is_break_to_stop")
+% disp(cost2);
+% disp("If passed DestinationS:")
+% disp(currNode.egoFrenetState(1) > checkPoint)
 
 end
 
@@ -607,8 +645,8 @@ end
 function flag = checkCollision(node, nextNode, predictedActPositions, egoVehicle, profiles, TimeResolution, scenario, refPath)
 % using AABB method to check the collision of the vehicles
 flag = false;
-disp(node.state);
-disp(nextNode.state);
+% disp(node.state);
+% disp(nextNode.state);
 egoVehicleTraj = packUpEgoVehicleTrajactory(node, nextNode, TimeResolution, refPath);
 currTime = scenario.SimulationTime + node.time;
 index = int32(currTime / 0.2) + 1;
