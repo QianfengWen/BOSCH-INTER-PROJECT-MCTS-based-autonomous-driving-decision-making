@@ -13,7 +13,7 @@ addpath('scenarioConfigs');
 
 
 % This is for Intersection, Go Straight example2.
-% [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = IntersectionGoStraightexample2();
+[scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = IntersectionGoStraightexample2();
 
 % This is for Intersection, Unprotected Straight Cross example
 % [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = IntersectionUnprotectedStraightCrossexample();
@@ -34,7 +34,7 @@ addpath('scenarioConfigs');
 % [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = IntersectionStraightexample();
 
 % This is for Intersection, Unprotected Left Turn example
-[scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = IntersectionUnprotectedLeftTurnexample();
+% [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = IntersectionUnprotectedLeftTurnexample();
 
 % This is for Highway Exit (HE) example
 % [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = HighwayExitHEexample();
