@@ -1,49 +1,49 @@
 clear;
 % Initially state
+addpath('scenarioConfigs');
+% VERY IMPORTANT IMFORMATION !!!
+% To simulate each scenario that we provided below, just wrap the comments
+% of each line. 
+% E.g, defaultly, now the program is simulating the scenario of
+% Intersection, Go Straight example2.
+% After selection the right scenario, just click run and wait until two
+% graphs come out, they will show the direct details about this simulation.
+% Hint: As the special traits of the MCTS, you may get different result for
+% a single scenario, just try to run more times to explore them!
 
-quantStatuses = cell(0);
 
-tempStatus = struct( ...
-    "Success", NaN, ...
-    "AvgTime", 0, ...
-    "collided", NaN);
+% This is for Intersection, Go Straight example2.
+% [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = IntersectionGoStraightexample2();
 
-for test=1:300
-disp(test);
-% This is for 6 lanes With5CarsTurningLeft scenario.
-% [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = ds6_lanes_roadWith5CarsTurningLeft();
+% This is for Intersection, Unprotected Straight Cross example
+% [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = IntersectionUnprotectedStraightCrossexample();
 
-% This is for 6 lanes With5Cars horizontal crossing scenario
-[scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = ds6_lanes_roadWith5Cars_horizontal_crossing();
+% This is for Intersection, Blocked by Stationary Objects example
+% [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = IntersectionBlockedbyStationaryObjectsexample();
 
-% This is for 6 lanes With5Cars stucked scenario
-% [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = ds6_lanes_roadWith5Cars_stucked();
+% This is for Intersection, Go Straight example
+% [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = IntersectionGoStraightexample();
 
-% This is for 6 lanes With5Cars Cutting in scenario
-% [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = ds6_lanes_roadWith5CarsCuttingIn();
+% This is for Intersection, Blocked example
+% [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = IntersectionBlockedexample();
 
-% This is for 6 lanes With5Cars stopping scenario
-% [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = ds6_lanes_roadWith5Cars_stopping();
+% This is for Intersection, Unprotected Right Turn example
+% [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = IntersectionUnprotectedRightTurnexample();
 
-% This is for 6 lanes With5Cars and the egoVehicle turning right
-% [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = ds6_lanes_roadWith5Cars_egoTurningRight();
+% This is for Intersection, Straight example
+% [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = IntersectionStraightexample();
 
-% This is for 6 lanes With5Cars 2Cars cutting in scenario
-% [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = ds6_lanes_roadWith5Cars_2Cars_CuttingIn();
+% This is for Intersection, Unprotected Left Turn example
+[scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = IntersectionUnprotectedLeftTurnexample();
 
-% This is for 6 lanes With5Cars while egoVehicle turning left
-% [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = ds6_lanes_roadWith5Cars_egoTurningLeft();
-% [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = ds6_lanes_roadWith5Cars_egoTurningLeft_2();
+% This is for Highway Exit (HE) example
+% [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = HighwayExitHEexample();
 
-% This is for highWay with 4 lanes
-% [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = ds4_lanes_highWay();
-% [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = ds4_lanes_highWay_advanced();
+% This is for Large Curvature example
+% [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = LargeCurvatureexample();
 
-% This is for emergency_break_and_crowded situation.
-% [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = ds6_emergency_break_and_crowded_scenario();
+% Above are all the scenarios of the program.
 
-% This is for bend scenario.
-% [scenario, egoVehicle, egoWaypoints, actorWaypoints, allStatus, roadConfigs] = ds4_bend_Scenario();
 
 % This is for giving the egoCar's initial position.
 % setStartEgoState(egoWaypoints, velocity, acceleration)
@@ -53,34 +53,21 @@ startEgoState = setStartEgoState(egoWaypoints, 5, 0);
 egorefPath = referencePathFrenet(egoWaypoints);
 % refPath = [x y theta kappa dkappa s]
 connector = trajectoryGeneratorFrenet(egorefPath,'TimeResolution',1.0);
-% Visualize path regions for sampling strategy visualization
 pathPoints = closestPoint(egorefPath, egorefPath.Waypoints(:,1:2)); % [x y theta kappa dkappa s]
 roadS = pathPoints(:,end);
 
 % Set destination position.
-% DestinationS = egorefPath.PathLength;
-DestinationS = egorefPath.SegmentParameters(end, end);
+DestinationS = egorefPath.PathLength;
+% DestinationS = egorefPath.SegmentParameters(end, end);
 
-
-% Initial ego state for stuckedCar Scenario
-
-% This is for 2 lanes scenario
-% startEgoState = [10.9 -1.4 0 0 5 0];
-
-% This is for 6 lanes scenario
-% startEgoState = [-12.4664923117851 0.00531897259204506 0 0 5 0];
-
-% This is for 6 lanes jumping scenario
-% startEgoState = [-7.3 -5.5 0 0 5 0];
-
-
+% Moving egoVehicle into the initial state of the scenario.
 helperMoveEgoVehicleToState(egoVehicle, startEgoState);
 
 egoFrenetState = global2frenet(egorefPath, startEgoState);
 
 % Initialize basic configs
 TIME = 0;
-max_iter = 2500;
+max_iter = 3000;
 accMax = 5;
 limitJerk = 15;
 speedlimit = 20;
@@ -129,9 +116,6 @@ for i = 1:numel(predictedActTrajectories)
 
 end
 
-% Count tic toc time for quantitative research;
-TotalTime = 0; 
-
 while scenario.SimulationTime < scenario.StopTime && root.egoFrenetState(1) < DestinationS
     
     % This is to detect all actor Vehicles.
@@ -147,8 +131,6 @@ while scenario.SimulationTime < scenario.StopTime && root.egoFrenetState(1) < De
     Tree{1} = root;
 
     %PLANNING SIMULATION
-    % iterTime = root.visits;
-    tic
     while (Tree{1}.visits < max_iter)
         curr_node = selection(Tree{1}, Tree);
 
@@ -171,12 +153,11 @@ while scenario.SimulationTime < scenario.StopTime && root.egoFrenetState(1) < De
                 curr_node = Tree{1};
             end
         else
-            % if curr_node.time - MaxTimeHorizon >= 0
+            % extra rollout for Maxtimehorizon
             cost = roll_out(curr_node, MaxRolloutHorizon, TimeResolution, predictedActPositions, accMax, speedlimit, egorefPath, DestinationS, egoVehicle, profiles, scenario);
             Tree = back_propagation(curr_node, cost, Tree);
             Tree = updateUCB(Tree{1}, Tree);
             curr_node = Tree{1};
-            % end
         end
     end
     % 1 is the index of the root node.
@@ -208,22 +189,22 @@ while scenario.SimulationTime < scenario.StopTime && root.egoFrenetState(1) < De
         expectedNode.egoFrenetState = root.egoFrenetState + [displacementEmergencyS, deltaSpeedEmergencyS, emergencyJerkS * TimeResolution, displacementEmergencyL, deltaSpeedEmergencyL, 0];
         expectedNode.state = frenet2global(egorefPath, expectedNode.egoFrenetState);
 
-        % disp("Tried emergency break.")
+        disp("Tried emergency break.")
         if stop
-            % disp("There's obstacles forward, the car has stopped.")
+            disp("There's obstacles forward, the car has stopped.")
             % disp(checkCollision(root, expectedNode, predictedActPositions, egoVehicle, profiles, TimeResolution, scenario, egorefPath))
             expectedNode.egoFrenetState(3) = 0;
             expectedNode.state = frenet2global(egorefPath, expectedNode.egoFrenetState);
         else
             if checkCollision(root, expectedNode, predictedActPositions, egoVehicle, profiles, TimeResolution, scenario, egorefPath)
-                % disp("Collision is inevitable.");
+                disp("Collision is inevitable.");
                 flagCollision = true;
                 break;
             end
         end
 
     end
-    TotalTime(numel(TotalTime) + 1) = toc;
+    % TotalTime(numel(TotalTime) + 1) = toc;
     AllPath{numel(AllPath) + 1} = expectedNode;
     AllTree{numel(AllTree) + 1} = Tree;
     wp = [root.state(1:2) 0; expectedNode.state(1:2) 0];
@@ -254,27 +235,8 @@ while scenario.SimulationTime < scenario.StopTime && root.egoFrenetState(1) < De
     advance(scenario)
 end
 
-AvgTime = sum(TotalTime) / numel(TotalTime);
-if root.egoFrenetState(1) + 0.5 > DestinationS && ~flagCollision
-    success = true;
-    collided = false;
-else
-    if ~flagCollision
-    success = false;
-    collided = false;
-    else
-    success = false;
-    collided = true;
-    end
-end
-tempStatus.AvgTime = AvgTime;
-tempStatus.Success = success;
-tempStatus.collide = collided;
-quantStatuses{numel(quantStatuses) + 1} = tempStatus;
+displayScenario(AllPath, actorWaypoints, profiles, allStatus, roadConfigs);
 
-% displayScenario(AllPath, actorWaypoints, profiles, allStatus, roadConfigs);
-
-end
 
 
 function Tree_ = expand(Tree, node, TimeResolution, accMax, speedlimit, refPath, predictedActPositions, egoVehicle, profiles, lbdry, roadWidth, scenario)
@@ -300,7 +262,6 @@ if ~checkCollision(node, newNode5, predictedActPositions, egoVehicle, profiles, 
     Tree{node.index}.children(numel(Tree{node.index}.children) + 1) = newNode5.index;
     Tree{numel(Tree) + 1} = newNode5;
 end
-
 
 % accMax is the upper bound for egoVehicle
 
@@ -331,7 +292,7 @@ end
 
 for i = 1:numel(lbdry)
     % check whether the lanes are dashed
-    if (lbdry(i).BoundaryType == 2 || lbdry(i).BoundaryType == 4) && node.state(5) >= 1 && node.egoFrenetState(1) >= refPath.SegmentParameters(end, end)  || node.egoFrenetState(1) <= refPath.SegmentParameters(2, end)
+    if (lbdry(i).BoundaryType == 2 || lbdry(i).BoundaryType == 4) && node.state(5) >= 1 && (node.egoFrenetState(1) >= refPath.SegmentParameters(end, end)  || node.egoFrenetState(1) <= refPath.SegmentParameters(2, end))
         if lbdry(i).LateralOffset > 0
             % change to the left-side lane
 
@@ -391,7 +352,7 @@ for nextAcc = 1:accMax
         end
     end
 
-    % 加速的情况
+    % acceleration section
     jerk2 = (nextAcc - node.egoFrenetState(3)) / TimeResolution;
     newNode2 = struct('state', node.state, 'time', node.time + TimeResolution, ...
         'children', 0, 'visits', 0, 'score', 0, 'index', numel(Tree) + 1, 'parent', node.index, 'parentaCC', node.state(1, end), 'UCB', inf, 'egoFrenetState', node.egoFrenetState,'avgScore', 0, 'laneChangingProperties', node.laneChangingProperties);
@@ -592,16 +553,6 @@ end
 
 cost2 = costFunction(node, newNode, checkPoint, predicted, MaxTimeHorizon, TimeResolution, egoVehicle, speedlimit, profiles, scenario);
 cost = cost + cost2(1);
-% disp("currNode.state:");
-% disp(currNode.state);
-% disp("currNode.egoFrenetState:");
-% disp(currNode.egoFrenetState);
-% disp("currNode's cost:")
-% disp("1. total_cost 2. cost_comfort 3. cost_safety 4. cost_pass 5. cost_stimulation 6. cost_lane_changing 7. cost_is_break_to_stop")
-% disp(cost2);
-% disp("If passed DestinationS:")
-% disp(currNode.egoFrenetState(1) > checkPoint)
-
 end
 
 function tree_ = back_propagation(node, score, tree)
